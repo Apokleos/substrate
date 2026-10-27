@@ -94,6 +94,19 @@ func microVMAssets() map[string]AssetFile {
 	}
 }
 
+func kataAssets(names ...string) map[string]map[string]AssetFile {
+	a := AssetFile{URL: "gs://bucket/asset", SHA256: validSHA256}
+	assets := map[string]AssetFile{
+		"kata-shim":   a,
+		"kata-kernel": a,
+		"kata-config": a,
+	}
+	for _, name := range names {
+		assets[name] = a
+	}
+	return map[string]map[string]AssetFile{"amd64": assets}
+}
+
 // applyVAP installs the shipped ValidatingAdmissionPolicy + binding into the
 // envtest API server and waits for the apiserver to actually enforce it (policy
 // activation is asynchronous), confirmed by a sentinel that must be denied.
@@ -157,6 +170,38 @@ func TestSandboxConfigValidation(t *testing.T) {
 		name:    "valid microvm arm64 asset set",
 		sc:      sandboxConfig("ok-microvm-arm64", "microvm", map[string]map[string]AssetFile{"arm64": microVMAssets()}),
 		wantErr: false,
+	}, {
+		name:    "valid kata qemu with image",
+		sc:      sandboxConfig("ok-kata-qemu", SandboxClassKata, kataAssets("kata-qemu", "kata-qemu-data", "kata-image")),
+		wantErr: false,
+	}, {
+		name:    "valid kata qemu with initrd and firmware",
+		sc:      sandboxConfig("ok-kata-qemu-initrd", SandboxClassKata, kataAssets("kata-qemu", "kata-qemu-data", "kata-firmware", "kata-initrd")),
+		wantErr: false,
+	}, {
+		name:    "valid kata dragonball",
+		sc:      sandboxConfig("ok-kata-dragonball", SandboxClassKata, kataAssets("kata-image")),
+		wantErr: false,
+	}, {
+		name:    "kata with image and initrd",
+		sc:      sandboxConfig("bad-kata-two-rootfs", SandboxClassKata, kataAssets("kata-image", "kata-initrd")),
+		wantErr: true,
+		errMsg:  "exactly one",
+	}, {
+		name:    "kata qemu missing data",
+		sc:      sandboxConfig("bad-kata-qemu-no-data", SandboxClassKata, kataAssets("kata-qemu", "kata-image")),
+		wantErr: true,
+		errMsg:  "QEMU with kata-qemu-data",
+	}, {
+		name:    "kata dragonball with qemu data",
+		sc:      sandboxConfig("bad-kata-dragonball-qemu-data", SandboxClassKata, kataAssets("kata-qemu-data", "kata-image")),
+		wantErr: true,
+		errMsg:  "built-in Dragonball",
+	}, {
+		name:    "kata dragonball with firmware",
+		sc:      sandboxConfig("bad-kata-dragonball-firmware", SandboxClassKata, kataAssets("kata-firmware", "kata-image")),
+		wantErr: true,
+		errMsg:  "built-in Dragonball",
 	}, {
 		name: "microvm missing an asset",
 		sc: sandboxConfig("bad-microvm", "microvm", map[string]map[string]AssetFile{"amd64": func() map[string]AssetFile {

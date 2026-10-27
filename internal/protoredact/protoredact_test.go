@@ -469,6 +469,12 @@ func TestOurProtoFilesAreAllListed(t *testing.T) {
 	for _, file := range ourProtoFiles {
 		listed[path.Base(file.Path())] = true
 	}
+	// The temporary Kata Sandbox API is a private TTRPC wire schema. Its
+	// messages never pass through the shared gRPC logging interceptors, and Go's
+	// internal-package rule prevents this package from importing its descriptor.
+	wireOnly := map[string]bool{
+		"cmd/ateworker-kata/internal/katashim/sandboxapi/sandbox.proto": true,
+	}
 	root := filepath.Join("..", "..")
 	for _, dir := range []string{"cmd", "internal", "pkg"} {
 		err := filepath.WalkDir(filepath.Join(root, dir), func(p string, d fs.DirEntry, err error) error {
@@ -484,6 +490,9 @@ func TestOurProtoFilesAreAllListed(t *testing.T) {
 			}
 			if strings.HasSuffix(p, ".proto") && !listed[filepath.Base(p)] {
 				rel, _ := filepath.Rel(root, p)
+				if wireOnly[filepath.ToSlash(rel)] {
+					return nil
+				}
 				t.Errorf("%s is not in ourProtoFiles", rel)
 			}
 			return nil

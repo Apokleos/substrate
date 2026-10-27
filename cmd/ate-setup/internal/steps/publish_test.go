@@ -225,3 +225,31 @@ func TestPublishReleaseBinaries(t *testing.T) {
 		t.Errorf("%s --version = %q, want it to contain %q", binary, version, want)
 	}
 }
+
+func TestPublishWorkerImagesNeedsARegistry(t *testing.T) {
+	e := &Env{Cfg: &config.Config{Root: t.TempDir()}}
+
+	err := e.PublishWorkerImages(t.Context(), io.Discard)
+	if err == nil || !strings.Contains(err.Error(), "KO_DOCKER_REPO") {
+		t.Errorf("PublishWorkerImages() error = %v, want one naming KO_DOCKER_REPO", err)
+	}
+}
+
+func TestKataWorkerBuildFlags(t *testing.T) {
+	const ref = "registry.example/ateworker-kata@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	base := []string{"--cache-from=type=registry"}
+	got, err := kataWorkerBuildFlags(base, ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{base[0], "--build-arg=ATEWORKER_KATA_BINARY_IMAGE=" + ref}
+	if !slices.Equal(got, want) {
+		t.Errorf("kataWorkerBuildFlags() = %q, want %q", got, want)
+	}
+	if len(base) != 1 {
+		t.Errorf("kataWorkerBuildFlags() changed its input: %q", base)
+	}
+	if _, err := kataWorkerBuildFlags(nil, "registry.example/ateworker-kata:latest"); err == nil {
+		t.Error("kataWorkerBuildFlags() accepted a tag-only image")
+	}
+}

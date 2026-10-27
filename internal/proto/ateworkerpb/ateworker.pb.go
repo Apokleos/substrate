@@ -490,6 +490,15 @@ type RunWorkloadRequest struct {
 	// +k8s:eachKey=+k8s:maxLength=64
 	// +k8s:eachVal=+k8s:maxLength=4096 # PATH_MAX; a host path, not a contract
 	RuntimeAssetPaths map[string]string `protobuf:"bytes,8,rep,name=runtime_asset_paths,json=runtimeAssetPaths,proto3" json:"runtime_asset_paths,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// SHA-256 digests verified by atelet while fetching runtime_asset_paths.
+	// Keys use the same runtime asset names as runtime_asset_paths.
+	//
+	// +k8s:optional
+	// +k8s:maxProperties=16
+	// +k8s:eachKey=+k8s:maxLength=64
+	// +k8s:eachVal=+k8s:minLength=64
+	// +k8s:eachVal=+k8s:maxLength=64
+	RuntimeAssetSha256 map[string]string `protobuf:"bytes,11,rep,name=runtime_asset_sha256,json=runtimeAssetSha256,proto3" json:"runtime_asset_sha256,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// When absent the actor has no egress: its TCP is captured and refused.
 	//
 	// +k8s:optional
@@ -589,6 +598,13 @@ func (x *RunWorkloadRequest) GetSpec() *WorkloadSpec {
 func (x *RunWorkloadRequest) GetRuntimeAssetPaths() map[string]string {
 	if x != nil {
 		return x.RuntimeAssetPaths
+	}
+	return nil
+}
+
+func (x *RunWorkloadRequest) GetRuntimeAssetSha256() map[string]string {
+	if x != nil {
+		return x.RuntimeAssetSha256
 	}
 	return nil
 }
@@ -1494,6 +1510,15 @@ type RestoreWorkloadRequest struct {
 	// +k8s:eachKey=+k8s:maxLength=64
 	// +k8s:eachVal=+k8s:maxLength=4096 # PATH_MAX; a host path, not a contract
 	RuntimeAssetPaths map[string]string `protobuf:"bytes,8,rep,name=runtime_asset_paths,json=runtimeAssetPaths,proto3" json:"runtime_asset_paths,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// SHA-256 digests verified by atelet while fetching runtime_asset_paths.
+	// Keys use the same runtime asset names as runtime_asset_paths.
+	//
+	// +k8s:optional
+	// +k8s:maxProperties=16
+	// +k8s:eachKey=+k8s:maxLength=64
+	// +k8s:eachVal=+k8s:minLength=64
+	// +k8s:eachVal=+k8s:maxLength=64
+	RuntimeAssetSha256 map[string]string `protobuf:"bytes,15,rep,name=runtime_asset_sha256,json=runtimeAssetSha256,proto3" json:"runtime_asset_sha256,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Fidelity to restore from the snapshot.
 	//
 	// +k8s:required
@@ -1604,6 +1629,13 @@ func (x *RestoreWorkloadRequest) GetSpec() *WorkloadSpec {
 func (x *RestoreWorkloadRequest) GetRuntimeAssetPaths() map[string]string {
 	if x != nil {
 		return x.RuntimeAssetPaths
+	}
+	return nil
+}
+
+func (x *RestoreWorkloadRequest) GetRuntimeAssetSha256() map[string]string {
+	if x != nil {
+		return x.RuntimeAssetSha256
 	}
 	return nil
 }
@@ -2072,7 +2104,7 @@ const file_internal_proto_ateworkerpb_ateworker_proto_rawDesc = "" +
 	"\x04spec\x18\a \x01(\v2\x17.ateworker.WorkloadSpecR\x04spec\x123\n" +
 	"\n" +
 	"actor_dirs\x18\b \x01(\v2\x14.ateworker.ActorDirsR\tactorDirs\"\x1b\n" +
-	"\x19TerminateWorkloadResponse\"\x99\x05\n" +
+	"\x19TerminateWorkloadResponse\"\xc9\x06\n" +
 	"\x12RunWorkloadRequest\x12\x1a\n" +
 	"\batespace\x18\x01 \x01(\tR\batespace\x12\x1d\n" +
 	"\n" +
@@ -2083,13 +2115,17 @@ const file_internal_proto_ateworkerpb_ateworker_proto_rawDesc = "" +
 	"\n" +
 	"runsc_path\x18\x06 \x01(\tR\trunscPath\x12+\n" +
 	"\x04spec\x18\a \x01(\v2\x17.ateworker.WorkloadSpecR\x04spec\x12d\n" +
-	"\x13runtime_asset_paths\x18\b \x03(\v24.ateworker.RunWorkloadRequest.RuntimeAssetPathsEntryR\x11runtimeAssetPaths\x12D\n" +
+	"\x13runtime_asset_paths\x18\b \x03(\v24.ateworker.RunWorkloadRequest.RuntimeAssetPathsEntryR\x11runtimeAssetPaths\x12g\n" +
+	"\x14runtime_asset_sha256\x18\v \x03(\v25.ateworker.RunWorkloadRequest.RuntimeAssetSha256EntryR\x12runtimeAssetSha256\x12D\n" +
 	"\x0eegress_gateway\x18\t \x01(\v2\x18.ateworker.EgressGatewayH\x00R\regressGateway\x88\x01\x01\x12=\n" +
 	"\tresources\x18\n" +
 	" \x01(\v2\x1f.ateworker.ResourceRequirementsR\tresources\x123\n" +
 	"\n" +
 	"actor_dirs\x18\f \x01(\v2\x14.ateworker.ActorDirsR\tactorDirs\x1aD\n" +
 	"\x16RuntimeAssetPathsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aE\n" +
+	"\x17RuntimeAssetSha256Entry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x11\n" +
 	"\x0f_egress_gateway\")\n" +
@@ -2144,7 +2180,7 @@ const file_internal_proto_ateworkerpb_ateworker_proto_rawDesc = "" +
 	"actor_dirs\x18\t \x01(\v2\x14.ateworker.ActorDirsR\tactorDirs\"s\n" +
 	"\x1aCheckpointWorkloadResponse\x12%\n" +
 	"\x0esnapshot_files\x18\x01 \x03(\tR\rsnapshotFiles\x12.\n" +
-	"\x13data_snapshot_files\x18\x02 \x03(\tR\x11dataSnapshotFiles\"\x8c\x06\n" +
+	"\x13data_snapshot_files\x18\x02 \x03(\tR\x11dataSnapshotFiles\"\xc0\a\n" +
 	"\x16RestoreWorkloadRequest\x12\x1a\n" +
 	"\batespace\x18\x01 \x01(\tR\batespace\x12\x1d\n" +
 	"\n" +
@@ -2155,7 +2191,8 @@ const file_internal_proto_ateworkerpb_ateworker_proto_rawDesc = "" +
 	"\n" +
 	"runsc_path\x18\x06 \x01(\tR\trunscPath\x12+\n" +
 	"\x04spec\x18\a \x01(\v2\x17.ateworker.WorkloadSpecR\x04spec\x12h\n" +
-	"\x13runtime_asset_paths\x18\b \x03(\v28.ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntryR\x11runtimeAssetPaths\x127\n" +
+	"\x13runtime_asset_paths\x18\b \x03(\v28.ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntryR\x11runtimeAssetPaths\x12k\n" +
+	"\x14runtime_asset_sha256\x18\x0f \x03(\v29.ateworker.RestoreWorkloadRequest.RuntimeAssetSha256EntryR\x12runtimeAssetSha256\x127\n" +
 	"\bfidelity\x18\t \x01(\x0e2\x1b.ateworker.SnapshotFidelityR\bfidelity\x12D\n" +
 	"\x0eegress_gateway\x18\n" +
 	" \x01(\v2\x18.ateworker.EgressGatewayH\x00R\regressGateway\x88\x01\x01\x12=\n" +
@@ -2164,6 +2201,9 @@ const file_internal_proto_ateworkerpb_ateworker_proto_rawDesc = "" +
 	"actor_dirs\x18\r \x01(\v2\x14.ateworker.ActorDirsR\tactorDirs\x120\n" +
 	"\x14preserve_restore_dir\x18\x0e \x01(\bR\x12preserveRestoreDir\x1aD\n" +
 	"\x16RuntimeAssetPathsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aE\n" +
+	"\x17RuntimeAssetSha256Entry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x11\n" +
 	"\x0f_egress_gateway\"<\n" +
@@ -2222,7 +2262,7 @@ func file_internal_proto_ateworkerpb_ateworker_proto_rawDescGZIP() []byte {
 }
 
 var file_internal_proto_ateworkerpb_ateworker_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_internal_proto_ateworkerpb_ateworker_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_internal_proto_ateworkerpb_ateworker_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_internal_proto_ateworkerpb_ateworker_proto_goTypes = []any{
 	(SnapshotFidelity)(0),                  // 0: ateworker.SnapshotFidelity
 	(StatsSource)(0),                       // 1: ateworker.StatsSource
@@ -2250,55 +2290,59 @@ var file_internal_proto_ateworkerpb_ateworker_proto_goTypes = []any{
 	(*GetActiveWorkloadStatsRequest)(nil),  // 23: ateworker.GetActiveWorkloadStatsRequest
 	(*GetActiveWorkloadStatsResponse)(nil), // 24: ateworker.GetActiveWorkloadStatsResponse
 	nil,                                    // 25: ateworker.RunWorkloadRequest.RuntimeAssetPathsEntry
-	nil,                                    // 26: ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntry
+	nil,                                    // 26: ateworker.RunWorkloadRequest.RuntimeAssetSha256Entry
+	nil,                                    // 27: ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntry
+	nil,                                    // 28: ateworker.RestoreWorkloadRequest.RuntimeAssetSha256Entry
 }
 var file_internal_proto_ateworkerpb_ateworker_proto_depIdxs = []int32{
 	7,  // 0: ateworker.TerminateWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
 	2,  // 1: ateworker.TerminateWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
 	7,  // 2: ateworker.RunWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
 	25, // 3: ateworker.RunWorkloadRequest.runtime_asset_paths:type_name -> ateworker.RunWorkloadRequest.RuntimeAssetPathsEntry
-	6,  // 4: ateworker.RunWorkloadRequest.egress_gateway:type_name -> ateworker.EgressGateway
-	10, // 5: ateworker.RunWorkloadRequest.resources:type_name -> ateworker.ResourceRequirements
-	2,  // 6: ateworker.RunWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
-	8,  // 7: ateworker.WorkloadSpec.containers:type_name -> ateworker.Container
-	13, // 8: ateworker.Container.wakeup_probe:type_name -> ateworker.WakeupProbe
-	12, // 9: ateworker.Container.durable_dir_volume_mounts:type_name -> ateworker.VolumeMount
-	12, // 10: ateworker.Container.external_volume_mounts:type_name -> ateworker.VolumeMount
-	12, // 11: ateworker.Container.system_info_volume_mounts:type_name -> ateworker.VolumeMount
-	12, // 12: ateworker.Container.image_volume_mounts:type_name -> ateworker.VolumeMount
-	9,  // 13: ateworker.Container.container_spec:type_name -> ateworker.ContainerSpec
-	10, // 14: ateworker.ContainerSpec.resources:type_name -> ateworker.ResourceRequirements
-	11, // 15: ateworker.ResourceRequirements.limits:type_name -> ateworker.Resources
-	14, // 16: ateworker.WakeupProbe.http_get:type_name -> ateworker.HttpGetAction
-	7,  // 17: ateworker.CheckpointWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
-	0,  // 18: ateworker.CheckpointWorkloadRequest.fidelity:type_name -> ateworker.SnapshotFidelity
-	2,  // 19: ateworker.CheckpointWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
-	7,  // 20: ateworker.RestoreWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
-	26, // 21: ateworker.RestoreWorkloadRequest.runtime_asset_paths:type_name -> ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntry
-	0,  // 22: ateworker.RestoreWorkloadRequest.fidelity:type_name -> ateworker.SnapshotFidelity
-	6,  // 23: ateworker.RestoreWorkloadRequest.egress_gateway:type_name -> ateworker.EgressGateway
-	10, // 24: ateworker.RestoreWorkloadRequest.resources:type_name -> ateworker.ResourceRequirements
-	2,  // 25: ateworker.RestoreWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
-	1,  // 26: ateworker.WorkloadStatsSample.source:type_name -> ateworker.StatsSource
-	21, // 27: ateworker.GetWorkloadStatsResponse.sample:type_name -> ateworker.WorkloadStatsSample
-	21, // 28: ateworker.GetActiveWorkloadStatsResponse.samples:type_name -> ateworker.WorkloadStatsSample
-	5,  // 29: ateworker.Worker.RunWorkload:input_type -> ateworker.RunWorkloadRequest
-	16, // 30: ateworker.Worker.CheckpointWorkload:input_type -> ateworker.CheckpointWorkloadRequest
-	18, // 31: ateworker.Worker.RestoreWorkload:input_type -> ateworker.RestoreWorkloadRequest
-	20, // 32: ateworker.Worker.GetWorkloadStats:input_type -> ateworker.GetWorkloadStatsRequest
-	23, // 33: ateworker.Worker.GetActiveWorkloadStats:input_type -> ateworker.GetActiveWorkloadStatsRequest
-	3,  // 34: ateworker.Worker.TerminateWorkload:input_type -> ateworker.TerminateWorkloadRequest
-	15, // 35: ateworker.Worker.RunWorkload:output_type -> ateworker.RunWorkloadResponse
-	17, // 36: ateworker.Worker.CheckpointWorkload:output_type -> ateworker.CheckpointWorkloadResponse
-	19, // 37: ateworker.Worker.RestoreWorkload:output_type -> ateworker.RestoreWorkloadResponse
-	22, // 38: ateworker.Worker.GetWorkloadStats:output_type -> ateworker.GetWorkloadStatsResponse
-	24, // 39: ateworker.Worker.GetActiveWorkloadStats:output_type -> ateworker.GetActiveWorkloadStatsResponse
-	4,  // 40: ateworker.Worker.TerminateWorkload:output_type -> ateworker.TerminateWorkloadResponse
-	35, // [35:41] is the sub-list for method output_type
-	29, // [29:35] is the sub-list for method input_type
-	29, // [29:29] is the sub-list for extension type_name
-	29, // [29:29] is the sub-list for extension extendee
-	0,  // [0:29] is the sub-list for field type_name
+	26, // 4: ateworker.RunWorkloadRequest.runtime_asset_sha256:type_name -> ateworker.RunWorkloadRequest.RuntimeAssetSha256Entry
+	6,  // 5: ateworker.RunWorkloadRequest.egress_gateway:type_name -> ateworker.EgressGateway
+	10, // 6: ateworker.RunWorkloadRequest.resources:type_name -> ateworker.ResourceRequirements
+	2,  // 7: ateworker.RunWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
+	8,  // 8: ateworker.WorkloadSpec.containers:type_name -> ateworker.Container
+	13, // 9: ateworker.Container.wakeup_probe:type_name -> ateworker.WakeupProbe
+	12, // 10: ateworker.Container.durable_dir_volume_mounts:type_name -> ateworker.VolumeMount
+	12, // 11: ateworker.Container.external_volume_mounts:type_name -> ateworker.VolumeMount
+	12, // 12: ateworker.Container.system_info_volume_mounts:type_name -> ateworker.VolumeMount
+	12, // 13: ateworker.Container.image_volume_mounts:type_name -> ateworker.VolumeMount
+	9,  // 14: ateworker.Container.container_spec:type_name -> ateworker.ContainerSpec
+	10, // 15: ateworker.ContainerSpec.resources:type_name -> ateworker.ResourceRequirements
+	11, // 16: ateworker.ResourceRequirements.limits:type_name -> ateworker.Resources
+	14, // 17: ateworker.WakeupProbe.http_get:type_name -> ateworker.HttpGetAction
+	7,  // 18: ateworker.CheckpointWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
+	0,  // 19: ateworker.CheckpointWorkloadRequest.fidelity:type_name -> ateworker.SnapshotFidelity
+	2,  // 20: ateworker.CheckpointWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
+	7,  // 21: ateworker.RestoreWorkloadRequest.spec:type_name -> ateworker.WorkloadSpec
+	27, // 22: ateworker.RestoreWorkloadRequest.runtime_asset_paths:type_name -> ateworker.RestoreWorkloadRequest.RuntimeAssetPathsEntry
+	28, // 23: ateworker.RestoreWorkloadRequest.runtime_asset_sha256:type_name -> ateworker.RestoreWorkloadRequest.RuntimeAssetSha256Entry
+	0,  // 24: ateworker.RestoreWorkloadRequest.fidelity:type_name -> ateworker.SnapshotFidelity
+	6,  // 25: ateworker.RestoreWorkloadRequest.egress_gateway:type_name -> ateworker.EgressGateway
+	10, // 26: ateworker.RestoreWorkloadRequest.resources:type_name -> ateworker.ResourceRequirements
+	2,  // 27: ateworker.RestoreWorkloadRequest.actor_dirs:type_name -> ateworker.ActorDirs
+	1,  // 28: ateworker.WorkloadStatsSample.source:type_name -> ateworker.StatsSource
+	21, // 29: ateworker.GetWorkloadStatsResponse.sample:type_name -> ateworker.WorkloadStatsSample
+	21, // 30: ateworker.GetActiveWorkloadStatsResponse.samples:type_name -> ateworker.WorkloadStatsSample
+	5,  // 31: ateworker.Worker.RunWorkload:input_type -> ateworker.RunWorkloadRequest
+	16, // 32: ateworker.Worker.CheckpointWorkload:input_type -> ateworker.CheckpointWorkloadRequest
+	18, // 33: ateworker.Worker.RestoreWorkload:input_type -> ateworker.RestoreWorkloadRequest
+	20, // 34: ateworker.Worker.GetWorkloadStats:input_type -> ateworker.GetWorkloadStatsRequest
+	23, // 35: ateworker.Worker.GetActiveWorkloadStats:input_type -> ateworker.GetActiveWorkloadStatsRequest
+	3,  // 36: ateworker.Worker.TerminateWorkload:input_type -> ateworker.TerminateWorkloadRequest
+	15, // 37: ateworker.Worker.RunWorkload:output_type -> ateworker.RunWorkloadResponse
+	17, // 38: ateworker.Worker.CheckpointWorkload:output_type -> ateworker.CheckpointWorkloadResponse
+	19, // 39: ateworker.Worker.RestoreWorkload:output_type -> ateworker.RestoreWorkloadResponse
+	22, // 40: ateworker.Worker.GetWorkloadStats:output_type -> ateworker.GetWorkloadStatsResponse
+	24, // 41: ateworker.Worker.GetActiveWorkloadStats:output_type -> ateworker.GetActiveWorkloadStatsResponse
+	4,  // 42: ateworker.Worker.TerminateWorkload:output_type -> ateworker.TerminateWorkloadResponse
+	37, // [37:43] is the sub-list for method output_type
+	31, // [31:37] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_internal_proto_ateworkerpb_ateworker_proto_init() }
@@ -2314,7 +2358,7 @@ func file_internal_proto_ateworkerpb_ateworker_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_proto_ateworkerpb_ateworker_proto_rawDesc), len(file_internal_proto_ateworkerpb_ateworker_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   25,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

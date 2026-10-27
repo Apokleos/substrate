@@ -421,7 +421,7 @@ func workerSecurityContext(class atev1.SandboxClass) *corev1ac.SecurityContextAp
 		WithAppArmorProfile(corev1ac.AppArmorProfile().
 			WithType(corev1.AppArmorProfileTypeUnconfined))
 
-	if class == atev1.SandboxClassMicroVM {
+	if class == atev1.SandboxClassMicroVM || class == atev1.SandboxClassKata {
 		// Give up the default seccomp profile so virtiofsd keeps its own sandbox,
 		// which pivot_root()s — a syscall the profile denies whatever capabilities
 		// the worker holds. The trade favors containing the guest: virtiofsd parses
@@ -451,8 +451,8 @@ func workerSecurityContext(class atev1.SandboxClass) *corev1ac.SecurityContextAp
 }
 
 // maybeApplyMicroVMPodShape adds the /dev/kvm device and node placement a
-// micro-VM (kata + cloud-hypervisor) worker pool needs, on top of any
-// pod-template settings. No-op unless sandboxClass is the micro-VM class.
+// VM-backed worker pool needs, on top of any pod-template settings. No-op
+// unless sandboxClass is microvm or kata.
 //
 // TODO: this hardcodes one sandbox class's pod requirements in the controller.
 // Consider making it generic so a sandbox class can declare its own pod shape
@@ -464,7 +464,7 @@ func maybeApplyMicroVMPodShape(
 	containerAC *corev1ac.ContainerApplyConfiguration,
 	sandboxClass atev1.SandboxClass,
 ) {
-	if sandboxClass != atev1.SandboxClassMicroVM {
+	if sandboxClass != atev1.SandboxClassMicroVM && sandboxClass != atev1.SandboxClassKata {
 		return
 	}
 
@@ -479,6 +479,13 @@ func maybeApplyMicroVMPodShape(
 	// atelet advertises it only on nodes where the device exists, so the
 	// request also keeps the pod off nodes that cannot run a micro-VM.
 	addDeviceResourceLimits(containerAC, deviceplugin.ResourceKVM)
+	if sandboxClass == atev1.SandboxClassKata {
+		// Kata runtime-rs uses vhost-vsock for the kata-agent transport and
+		// vhost-net for its accelerated network backend. Like KVM, these must
+		// come from kubelet's device manager so the container gets both the
+		// nodes and the matching device-cgroup grants.
+		addDeviceResourceLimits(containerAC, deviceplugin.ResourceVhostNet, deviceplugin.ResourceVhostVsock)
+	}
 
 	// The runtime also opens /dev/net/tun to build the guest's tap, but that
 	// one needs no grant: it is in the runtime's default device allow-list, so

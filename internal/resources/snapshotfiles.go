@@ -17,6 +17,7 @@ package resources
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 // FSCheckpointSubdir is the subdirectory under the checkpoint directory where
@@ -27,21 +28,32 @@ const FSCheckpointSubdir = "fs"
 // where container rootfs filesystem checkpoint files are stored.
 const RootfsCheckpointSubdir = "rootfs"
 
-// ValidateSnapshotFileNames requires each name to be a distinct plain file name
-// in the checkpoint directory or its "fs" or "rootfs" subdirectories. Actual
-// file access must still use os.Root so symlinks cannot escape that directory.
+// ValidateSnapshotFileNames requires each name to be a distinct, canonical,
+// local relative path. Actual file access must still use os.Root so symlinks
+// cannot escape the checkpoint directory.
 func ValidateSnapshotFileNames(files []string) error {
 	seen := make(map[string]bool, len(files))
 	for i, name := range files {
 		dir := filepath.Dir(name)
 		base := filepath.Base(name)
 		switch {
-		case !filepath.IsLocal(name) || name != filepath.Clean(name) || base == "." || (dir != "." && dir != FSCheckpointSubdir && dir != RootfsCheckpointSubdir):
-			return fmt.Errorf("snapshotFiles[%d] %q is not a file name in the checkpoint directory", i, name)
+		case !filepath.IsLocal(name) || name != filepath.Clean(name) || base == ".":
+			return fmt.Errorf("snapshotFiles[%d] %q is not a canonical path in the checkpoint directory", i, name)
+		case dir != "." && dir != FSCheckpointSubdir && dir != RootfsCheckpointSubdir && !inRuntimeSnapshotDir(dir):
+			return fmt.Errorf("snapshotFiles[%d] %q is outside an allowed snapshot subdirectory", i, name)
 		case seen[name]:
 			return fmt.Errorf("snapshotFiles[%d] %q is duplicated", i, name)
 		}
 		seen[name] = true
 	}
 	return nil
+}
+
+func inRuntimeSnapshotDir(dir string) bool {
+	for _, root := range []string{"kata", "storage", "vm"} {
+		if dir == root || strings.HasPrefix(dir, root+"/") {
+			return true
+		}
+	}
+	return false
 }

@@ -39,6 +39,16 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+func TestRuntimeAssetSHA256(t *testing.T) {
+	rec := &sandboxAssetsRecord{Assets: map[string]assetEntry{
+		"kata-kernel": {SHA256: "verified"},
+	}}
+	digests := runtimeAssetSHA256(rec)
+	if got := digests["kata-kernel"]; got != "verified" {
+		t.Fatalf("runtimeAssetSHA256() = %q, want verified", got)
+	}
+}
+
 func TestExtractTarArchive(t *testing.T) {
 	tests := []struct {
 		name      string

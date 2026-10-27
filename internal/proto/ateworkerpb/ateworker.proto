@@ -231,6 +231,16 @@ message RunWorkloadRequest {
   // +k8s:eachVal=+k8s:maxLength=4096 # PATH_MAX; a host path, not a contract
   map<string, string> runtime_asset_paths = 8;
 
+  // SHA-256 digests verified by atelet while fetching runtime_asset_paths.
+  // Keys use the same runtime asset names as runtime_asset_paths.
+  //
+  // +k8s:optional
+  // +k8s:maxProperties=16
+  // +k8s:eachKey=+k8s:maxLength=64
+  // +k8s:eachVal=+k8s:minLength=64
+  // +k8s:eachVal=+k8s:maxLength=64
+  map<string, string> runtime_asset_sha256 = 11;
+
   // When absent the actor has no egress: its TCP is captured and refused.
   //
   // +k8s:optional
@@ -527,6 +537,16 @@ message RestoreWorkloadRequest {
   // +k8s:eachKey=+k8s:maxLength=64
   // +k8s:eachVal=+k8s:maxLength=4096 # PATH_MAX; a host path, not a contract
   map<string, string> runtime_asset_paths = 8;
+
+  // SHA-256 digests verified by atelet while fetching runtime_asset_paths.
+  // Keys use the same runtime asset names as runtime_asset_paths.
+  //
+  // +k8s:optional
+  // +k8s:maxProperties=16
+  // +k8s:eachKey=+k8s:maxLength=64
+  // +k8s:eachVal=+k8s:minLength=64
+  // +k8s:eachVal=+k8s:maxLength=64
+  map<string, string> runtime_asset_sha256 = 15;
 
   // Fidelity to restore from the snapshot.
   //

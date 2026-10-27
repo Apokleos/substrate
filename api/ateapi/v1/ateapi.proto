@@ -2470,11 +2470,11 @@ message WorkerStatus {
 // it runs it under. A Worker has one entry per WorkerPool sandboxClasses
 // entry, so exactly one today.
 message WorkerSandboxClass {
-  // e.g. "gvisor", "microvm", as on WorkerPool.spec.sandboxClasses[].name.
+  // e.g. "gvisor", "microvm", "kata", as on WorkerPool.spec.sandboxClasses[].name.
   //
   // +k8s:required
   // +k8s:maxLength=63
-  // +k8s:customValidation # gvisor or microvm
+  // +k8s:customValidation # gvisor, microvm, or kata
   string sandbox_class = 1;
 
   // Runtime new and cold-booted actors of this class start under. Snapshots
@@ -2513,11 +2513,11 @@ message WorkerSandboxRuntime {
 // assignment and on the snapshots taken from it: one class and one of the
 // compatibility versions a Worker reports for it.
 message ActorSandboxRuntime {
-  // e.g. "gvisor", "microvm"
+  // e.g. "gvisor", "microvm", "kata"
   //
   // +k8s:required
   // +k8s:maxLength=63
-  // +k8s:customValidation # gvisor or microvm
+  // +k8s:customValidation # gvisor, microvm, or kata
   string sandbox_class = 1;
 
   // Compatibility version of the runtime. A snapshot stamped with it can

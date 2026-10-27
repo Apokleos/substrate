@@ -116,9 +116,9 @@ func TestUsageAttrsNormalizesSandboxClass(t *testing.T) {
 	for class, want := range map[string]string{
 		"microvm": "microvm",
 		"gvisor":  "gvisor",
+		"kata":    "kata",
 		"gVisor":  ateattr.SandboxClassUnknown,
 		"":        ateattr.SandboxClassUnknown,
-		"kata":    ateattr.SandboxClassUnknown,
 	} {
 		s := measuredSample()
 		s.SandboxClass = class

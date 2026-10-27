@@ -25,9 +25,16 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"go.ate.dev/substrate/cmd/ate-setup/internal/images"
 	"go.ate.dev/substrate/cmd/ate-setup/internal/ko"
 	"go.ate.dev/substrate/cmd/ate-setup/internal/log"
+)
+
+const (
+	kataWorkerImage     = "ateworker-kata"
+	kataWorkerBuildDir  = "build/ateworker-kata"
+	kataWorkerBinaryArg = "ATEWORKER_KATA_BINARY_IMAGE"
 )
 
 // releaseBinary is the binary a release attaches.
@@ -127,7 +134,7 @@ func writeChecksum(path string) (string, error) {
 // workerImages are the worker images a WorkerPool points at through
 // workerImage, one per sandbox class. No manifest references them, so the
 // install never publishes them as a side effect.
-var workerImages = []string{"ateworker-gvisor", "ateworker-microvm"}
+var workerImages = []string{"ateworker-gvisor", "ateworker-microvm", "ateworker-kata"}
 
 // PublishWorkerImages builds and pushes the worker images for this build and
 // writes their pushed references to w, one "<binary>: <ref>" line per image,
@@ -135,6 +142,9 @@ var workerImages = []string{"ateworker-gvisor", "ateworker-microvm"}
 // output. A WorkerPool moves to this build by pointing its workerImage at
 // the ref.
 func (e *Env) PublishWorkerImages(ctx context.Context, w io.Writer) error {
+	if e.Cfg.KODockerRepo == "" {
+		return fmt.Errorf("publishing worker images needs a registry to push to; set KO_DOCKER_REPO or --ko-docker-repo")
+	}
 	version := e.SubstrateVersion()
 	log.Stepf("publish_worker_images (%s)", version)
 	runner, err := e.koRunner()
@@ -147,6 +157,17 @@ func (e *Env) PublishWorkerImages(ctx context.Context, w io.Writer) error {
 		if err != nil {
 			return err
 		}
+		if img == kataWorkerImage {
+			flags, err := kataWorkerBuildFlags(e.Cfg.DockerBuildFlags, ref)
+			if err != nil {
+				return err
+			}
+			ref, err = images.BuildDockerfileImage(ctx, e.Cfg.Root, e.Cfg.KODockerRepo, img,
+				e.Cfg.Path(kataWorkerBuildDir), e.Cfg.KODefaultPlatforms, flags)
+			if err != nil {
+				return err
+			}
+		}
 		refs = append(refs, img+": "+ref)
 	}
 	if _, err := fmt.Fprintf(w, "\nWorker images for %s:\n", version); err != nil {
@@ -158,6 +179,14 @@ func (e *Env) PublishWorkerImages(ctx context.Context, w io.Writer) error {
 		}
 	}
 	return nil
+}
+
+func kataWorkerBuildFlags(base []string, binaryImage string) ([]string, error) {
+	if _, err := name.NewDigest(binaryImage, name.StrictValidation); err != nil {
+		return nil, fmt.Errorf("Kata worker binary image must be digest-pinned: %w", err)
+	}
+	flags := append([]string(nil), base...)
+	return append(flags, "--build-arg="+kataWorkerBinaryArg+"="+binaryImage), nil
 }
 
 // PublishReleaseOptions are the publish release-images settings.

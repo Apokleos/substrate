@@ -38,8 +38,13 @@ func TestValid(t *testing.T) {
 			want:  false,
 		},
 		{
-			name:  "unknown",
+			name:  "kata",
 			class: "kata",
+			want:  true,
+		},
+		{
+			name:  "unknown",
+			class: "unknown",
 			want:  false,
 		},
 		{

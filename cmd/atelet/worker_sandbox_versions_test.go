@@ -615,6 +615,28 @@ func TestSyncPodMicroVMAssetCacheAndEviction(t *testing.T) {
 	}
 }
 
+func TestVersionAttrsKata(t *testing.T) {
+	s := newTestSyncer(t)
+	s.probeCPUIdentity = func() (string, string, error) {
+		return testCPUVendor, testCPUModel, nil
+	}
+	rec := &sandboxAssetsRecord{Assets: map[string]assetEntry{"kata-shim": {SHA256: "sha-shim"}}}
+	s.microvmAssets["sha256:bundle"] = true
+	got, err := s.versionAttrs(context.Background(), atev1.SandboxClassKata, rec, "sha256:bundle", false)
+	if err != nil {
+		t.Fatalf("versionAttrs() error = %v", err)
+	}
+	want := sandboxruntimes.Attributes{
+		hardware.AttrArchitecture:      runtime.GOARCH,
+		hardware.AttrCPUVendor:         testCPUVendor,
+		hardware.AttrCPUModel:          testCPUModel,
+		hardware.AttrSandboxBundleHash: "sha256:bundle",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("versionAttrs() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestGVisorCPUFeaturesMemoizationAndErrors(t *testing.T) {
 	feats := testCPUFeatures()
 

@@ -47,6 +47,7 @@ function codegen::protobuf() {
         ':!:**/vendor/*' \
         ':!:third_party/*' \
         ':!:**/third_party/*' \
+        ':!:cmd/ateworker-kata/internal/katashim/sandboxapi/*' \
         ':!:_LICENSES/*' \
         | while read -r FILE; do dirname "${FILE}"; done \
         | sort \

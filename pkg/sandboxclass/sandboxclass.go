@@ -26,12 +26,14 @@ const (
 	// MicroVM is the micro-VM runtime (cmd/ateworker-microvm). It needs /dev/kvm
 	// and vhost devices.
 	MicroVM = "microvm"
+	// Kata is the shim-managed Kata runtime (cmd/ateworker-kata).
+	Kata = "kata"
 )
 
 // All returns every sandbox class. Keep it in sync with the
 // +kubebuilder:validation:Enum markers in api/infra/k8s/ate/v1.
 func All() []string {
-	return []string{GVisor, MicroVM}
+	return []string{GVisor, MicroVM, Kata}
 }
 
 // Valid reports whether class is one of All. The match is case-sensitive.

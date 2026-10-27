@@ -307,7 +307,7 @@ func (s *workerSandboxSyncer) versionAttrs(ctx context.Context, class atev1.Sand
 		hardware.AttrSandboxBundleHash: hash,
 	}
 	switch class {
-	case atev1.SandboxClassMicroVM:
+	case atev1.SandboxClassMicroVM, atev1.SandboxClassKata:
 		vendor, model, err := s.hostCPUIdentity()
 		if err != nil {
 			return nil, fmt.Errorf("while probing host CPU identity: %w", err)

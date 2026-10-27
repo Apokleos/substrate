@@ -26,6 +26,9 @@ func TestValidateSnapshotFileNames(t *testing.T) {
 		{name: "plain names", files: []string{"manifest.json", "memory.img", "durable-dir.tar"}},
 		{name: "fs subdir names", files: []string{"checkpoint.img", "fs/fscheckpoint.pb", "fs/multitar.img", "fs/pages.img", "fs/pages_meta.img"}},
 		{name: "rootfs subdir names", files: []string{"checkpoint.img", "rootfs/fscheckpoint.pb", "rootfs/multitar.img", "rootfs/pages.img", "rootfs/pages_meta.img"}},
+		{name: "runtime subdirs", files: []string{"manifest.json", "vm/state", "storage/rootfs.raw", "kata/vm/memory"}},
+		{name: "unexpected runtime subdir", files: []string{"other/state"}, wantErr: true},
+		{name: "nested fs subdir", files: []string{"fs/extra/state"}, wantErr: true},
 		{name: "empty name", files: []string{""}, wantErr: true},
 		{name: "dot", files: []string{"."}, wantErr: true},
 		{name: "dot dot", files: []string{".."}, wantErr: true},
@@ -33,6 +36,7 @@ func TestValidateSnapshotFileNames(t *testing.T) {
 		{name: "nested arbitrary subdir", files: []string{"a/b"}, wantErr: true},
 		{name: "deeply nested under fs", files: []string{"fs/a/b"}, wantErr: true},
 		{name: "deeply nested under rootfs", files: []string{"rootfs/a/b"}, wantErr: true},
+		{name: "non canonical nested path", files: []string{"vm/a/../b"}, wantErr: true},
 		{name: "escaping", files: []string{"../x"}, wantErr: true},
 		{name: "duplicate", files: []string{"a", "b", "a"}, wantErr: true},
 	} {

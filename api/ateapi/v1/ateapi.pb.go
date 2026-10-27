@@ -7637,11 +7637,11 @@ func (x *WorkerStatus) GetRegisteredEpoch() int64 {
 // entry, so exactly one today.
 type WorkerSandboxClass struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// e.g. "gvisor", "microvm", as on WorkerPool.spec.sandboxClasses[].name.
+	// e.g. "gvisor", "microvm", "kata", as on WorkerPool.spec.sandboxClasses[].name.
 	//
 	// +k8s:required
 	// +k8s:maxLength=63
-	// +k8s:customValidation # gvisor or microvm
+	// +k8s:customValidation # gvisor, microvm, or kata
 	SandboxClass string `protobuf:"bytes,1,opt,name=sandbox_class,json=sandboxClass,proto3" json:"sandbox_class,omitempty"`
 	// Runtime new and cold-booted actors of this class start under. Snapshots
 	// matching its version can also warm-boot on this worker.
@@ -7769,11 +7769,11 @@ func (x *WorkerSandboxRuntime) GetVersion() *VersionedSandboxCompat {
 // compatibility versions a Worker reports for it.
 type ActorSandboxRuntime struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// e.g. "gvisor", "microvm"
+	// e.g. "gvisor", "microvm", "kata"
 	//
 	// +k8s:required
 	// +k8s:maxLength=63
-	// +k8s:customValidation # gvisor or microvm
+	// +k8s:customValidation # gvisor, microvm, or kata
 	SandboxClass string `protobuf:"bytes,1,opt,name=sandbox_class,json=sandboxClass,proto3" json:"sandbox_class,omitempty"`
 	// Compatibility version of the runtime. A snapshot stamped with it can
 	// warm-boot on a worker whose runtime of this class matches it.

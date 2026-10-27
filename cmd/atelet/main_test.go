@@ -313,7 +313,7 @@ func TestCheckpointSnapshotFiles(t *testing.T) {
 		{name: "optional and empty", required: false},
 		{name: "required and empty", required: true, wantErr: true},
 		{name: "escapes the directory", files: []string{"../outside"}, required: true, wantErr: true},
-		{name: "nested", files: []string{"a/b"}, required: true, wantErr: true},
+		{name: "nested runtime artifact", files: []string{"vm/state"}, required: true},
 		{name: "dot", files: []string{"."}, required: true, wantErr: true},
 		{name: "unclean alias", files: []string{"checkpoint.img", "./checkpoint.img"}, required: true, wantErr: true},
 		{name: "duplicate", files: []string{"checkpoint.img", "checkpoint.img"}, required: true, wantErr: true},

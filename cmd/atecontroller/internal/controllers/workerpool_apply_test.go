@@ -341,10 +341,12 @@ func TestMicroVMPodShape(t *testing.T) {
 		name        string
 		class       atev1.SandboxClass
 		wantMicroVM bool
+		wantVsock   bool
 	}{
-		{"gvisor default", "", false},
-		{"gvisor explicit", atev1.SandboxClassGvisor, false},
-		{"microvm", atev1.SandboxClassMicroVM, true},
+		{"gvisor default", "", false, false},
+		{"gvisor explicit", atev1.SandboxClassGvisor, false, false},
+		{"microvm", atev1.SandboxClassMicroVM, true, false},
+		{"kata", atev1.SandboxClassKata, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -390,6 +392,12 @@ func TestMicroVMPodShape(t *testing.T) {
 				if qty != "1" {
 					t.Errorf("%s limit = %s, want 1", name, qty)
 				}
+			}
+			if got, ok := deviceLimit(ps.Containers[0], deviceplugin.ResourceVhostVsock); ok != tt.wantVsock || ok && got != "1" {
+				t.Errorf("%s limit = %q (present=%v), want present=%v with value 1", deviceplugin.ResourceVhostVsock, got, ok, tt.wantVsock)
+			}
+			if got, ok := deviceLimit(ps.Containers[0], deviceplugin.ResourceVhostNet); ok != tt.wantVsock || ok && got != "1" {
+				t.Errorf("%s limit = %q (present=%v), want present=%v with value 1", deviceplugin.ResourceVhostNet, got, ok, tt.wantVsock)
 			}
 
 			// The device request handles placement, so the class must not also

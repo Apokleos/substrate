@@ -246,6 +246,50 @@ func ValidateRuntimeAssetPath(root, p string, fldPath *field.Path) field.ErrorLi
 	return nil
 }
 
+// ValidateRuntimeAssetDir is the directory counterpart to
+// ValidateRuntimeAssetPath. Kata uses it for the extracted QEMU data asset.
+func ValidateRuntimeAssetDir(root, p string, fldPath *field.Path) field.ErrorList {
+	if p == "" {
+		return field.ErrorList{field.Required(fldPath, "")}
+	}
+	if !filepath.IsAbs(p) || filepath.Clean(p) != p {
+		return field.ErrorList{field.Invalid(fldPath, p, "must be an absolute, clean path")}
+	}
+	if rel, err := filepath.Rel(root, p); err != nil || rel == "." || !filepath.IsLocal(rel) {
+		return field.ErrorList{field.Invalid(fldPath, p, fmt.Sprintf("must be inside %s", root))}
+	}
+	resolved, err := filepath.EvalSymlinks(p)
+	if err != nil {
+		return field.ErrorList{field.Invalid(fldPath, p, err.Error())}
+	}
+	if resolved != p {
+		return field.ErrorList{field.Invalid(fldPath, p, "must not traverse a symlink")}
+	}
+	if fi, err := os.Stat(p); err != nil || !fi.IsDir() {
+		return field.ErrorList{field.Invalid(fldPath, p, "must be a directory")}
+	}
+	return nil
+}
+
+// ValidateContainerNames ensures application container names are safe and
+// unique OCI bundle path components. "pause" is reserved for infrastructure.
+func ValidateContainerNames(names []string) error {
+	seen := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		if errs := content.IsDNS1123Label(name); len(errs) > 0 {
+			return fmt.Errorf("invalid container name %q: %s", name, strings.Join(errs, "; "))
+		}
+		if name == "pause" {
+			return fmt.Errorf("invalid container name %q: reserved for sandbox infrastructure", name)
+		}
+		if _, ok := seen[name]; ok {
+			return fmt.Errorf("duplicate container name %q", name)
+		}
+		seen[name] = struct{}{}
+	}
+	return nil
+}
+
 // ValidateSandboxAssetsDir requires dir, the sandbox_assets_dir a request
 // names, to be the actor's own, nodepath.ActorSandboxAssetsDir(actorUID), so
 // a request cannot point a worker at binaries staged for another actor or

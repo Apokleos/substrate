@@ -269,8 +269,9 @@ func TestValidateSandboxClass(t *testing.T) {
 	}{
 		{name: "gvisor", class: "gvisor"},
 		{name: "microvm", class: "microvm"},
+		{name: "kata", class: "kata"},
 		{name: "empty left to tags", class: ""},
-		{name: "unknown class", class: "kata", want: field.ErrorList{field.NotSupported[string](path, nil, nil)}},
+		{name: "unknown class", class: "other", want: field.ErrorList{field.NotSupported[string](path, nil, nil)}},
 		{name: "case-sensitive", class: "GVISOR", want: field.ErrorList{field.NotSupported[string](path, nil, nil)}},
 	}
 	for _, tt := range tests {
@@ -702,5 +703,26 @@ func TestValidationErrorsRedactDebugRedactFields(t *testing.T) {
 	}
 	if got := errs[0].BadValue.(*ateapi.EnvVar).GetValue(); got != secret {
 		t.Errorf("caller's error list was modified: value = %q", got)
+	}
+}
+
+func TestValidateRuntimeAssetDir(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(root, "qemu-data")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(root, "qemu-data.tar")
+	if err := os.WriteFile(file, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if errs := ValidateRuntimeAssetDir(root, dir, field.NewPath("asset")); len(errs) != 0 {
+		t.Fatalf("ValidateRuntimeAssetDir() = %v, want no errors", errs)
+	}
+	if errs := ValidateRuntimeAssetDir(root, file, field.NewPath("asset")); len(errs) == 0 {
+		t.Fatal("ValidateRuntimeAssetDir() accepted a regular file")
 	}
 }

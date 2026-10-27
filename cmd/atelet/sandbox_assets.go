@@ -57,11 +57,20 @@ const sandboxManifestName = "manifest.json"
 // ponytail: 8GiB ceiling, make it a flag if a rootfs ever needs more.
 var maxAssetBytes int64 = 8 << 30
 
-// gvisorAssetName is the gVisor release tarball asset (gvisor.tar.zstd). The
-// tarball carries `runsc` together with the `gvisor-bin/` helper binaries,
-// so it is extracted into a content-addressed directory rather than as a
-// single file.
-const gvisorAssetName = "gvisor"
+const (
+	// gvisorAssetName is the gVisor release tarball asset (gvisor.tar.zstd). The
+	// tarball carries `runsc` together with the `gvisor-bin/` helper binaries,
+	// so it is extracted into a content-addressed directory rather than as a
+	// single file.
+	gvisorAssetName = "gvisor"
+
+	// kataQEMUDataAssetName is the QEMU data archive used by Kata. Unlike
+	// executable assets, it must be extracted and passed to the worker as a
+	// directory containing the firmware helper files QEMU expects.
+	kataQEMUDataAssetName = "kata-qemu-data"
+)
+
+var kataQEMUDataRequiredFiles = []string{"bios-256k.bin", "efi-virtio.rom", "pvh.bin", "kvmvapic.bin"}
 
 // assetEntry is one content-addressed sandbox asset (url + sha256).
 type assetEntry struct {
@@ -114,6 +123,16 @@ type sandboxAssetsRecord struct {
 	BootID string `json:"bootId,omitempty"`
 }
 
+// runtimeAssetSHA256 returns the identities atelet verified while populating
+// the content-addressed runtime asset cache.
+func runtimeAssetSHA256(rec *sandboxAssetsRecord) map[string]string {
+	digests := make(map[string]string, len(rec.Assets))
+	for name, asset := range rec.Assets {
+		digests[name] = asset.SHA256
+	}
+	return digests
+}
+
 // ensureSandboxAssets stages every asset in the record under dstDir, named
 // by asset name, and returns a map of asset name to the local path the worker
 // runs it from. gVisor has a single "gvisor" release-tarball asset (staged
@@ -150,6 +169,8 @@ func (s *Atelet) stageSandboxAssets(ctx context.Context, rec *sandboxAssetsRecor
 		var err error
 		if name == gvisorAssetName {
 			p, err = s.stageGVisorRelease(ctx, entry, dst)
+		} else if name == kataQEMUDataAssetName {
+			p, err = s.stageQEMUData(ctx, entry, dst)
 		} else {
 			p, err = s.stageAsset(ctx, entry, dst)
 		}
@@ -290,6 +311,52 @@ func (s *Atelet) stageGVisorRelease(ctx context.Context, entry assetEntry, dst s
 		return "", err
 	}
 	return runscPath, nil
+}
+
+// stageQEMUData links an extracted QEMU data archive from the cache to dst.
+func (s *Atelet) stageQEMUData(ctx context.Context, entry assetEntry, dst string) (string, error) {
+	key, err := assetKey(entry)
+	if err != nil {
+		return "", err
+	}
+	if ok, err := staged(ctx, dst); err != nil {
+		return "", err
+	} else if ok {
+		if err := requireRegularFiles(dst, kataQEMUDataRequiredFiles); err != nil {
+			return "", err
+		}
+		return dst, nil
+	}
+	fetch := func(ctx context.Context, dir string) error {
+		slog.InfoContext(ctx, "QEMU data cache miss; downloading", slog.String("url", entry.displayURL()), slog.String("sha256", entry.SHA256))
+		tarball := filepath.Join(dir, ".qemu-data-download")
+		if err := s.downloadVerified(ctx, entry, tarball); err != nil {
+			return err
+		}
+		if err := extractTarArchive(ctx, tarball, entry.displayURL(), dir); err != nil {
+			return err
+		}
+		if err := requireRegularFiles(dir, kataQEMUDataRequiredFiles); err != nil {
+			return fmt.Errorf("QEMU data archive %v is invalid: %w", entry.displayURL(), err)
+		}
+		return os.Remove(tarball)
+	}
+	if err := s.sandboxAssetCache.GetDirTo(ctx, key, dst, fetch); err != nil && !stagedMeanwhile(ctx, dst, err) {
+		return "", err
+	}
+	if err := requireRegularFiles(dst, kataQEMUDataRequiredFiles); err != nil {
+		return "", err
+	}
+	return dst, nil
+}
+
+func requireRegularFiles(dir string, names []string) error {
+	for _, name := range names {
+		if fi, err := os.Stat(filepath.Join(dir, name)); err != nil || !fi.Mode().IsRegular() {
+			return fmt.Errorf("required file %q is not a regular file: %v", name, err)
+		}
+	}
+	return nil
 }
 
 // downloadVerified fetches entry.URL into a new file at path, which must not

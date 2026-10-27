@@ -1612,7 +1612,7 @@ groups:
       cmd/credential-provider/kubernetes-secrets.
     annotations:
       substrate:
-        emitted_by: [ateapi, atelet, atenet-router, ateworker-gvisor, ateworker-microvm, credprovider]
+        emitted_by: [ateapi, atelet, atenet-router, ateworker-gvisor, ateworker-microvm, ateworker-kata, credprovider]
         golden_signals: [latency, traffic, errors]
         source: external
         instrumentation: go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc

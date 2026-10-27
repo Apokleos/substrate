@@ -48,6 +48,19 @@ spec:
           ['cloud-hypervisor', 'virtiofsd', 'kata-kernel', 'kata-image']
             .all(name, name in v.assets[arch])))
     message: "a microvm SandboxConfig must define cloud-hypervisor, virtiofsd, kata-kernel, and kata-image assets for every architecture of every version under spec.versions[].assets"
+  - expression: >-
+      object.spec.sandboxClass != 'kata' ||
+      object.spec.versions.all(v,
+        has(v.assets) && size(v.assets) > 0 &&
+        v.assets.all(arch,
+          !('kata-dragonball' in v.assets[arch]) &&
+          (('kata-image' in v.assets[arch]) != ('kata-initrd' in v.assets[arch])) &&
+          (('kata-qemu' in v.assets[arch] && 'kata-qemu-data' in v.assets[arch]) ||
+           (!('kata-qemu' in v.assets[arch]) && !('kata-qemu-data' in v.assets[arch]) &&
+            !('kata-firmware' in v.assets[arch]))) &&
+          ['kata-shim', 'kata-kernel', 'kata-config']
+            .all(name, name in v.assets[arch])))
+    message: "a kata SandboxConfig must define kata-shim, kata-kernel, kata-config, exactly one of kata-image or kata-initrd, and either QEMU with kata-qemu-data or built-in Dragonball without external VMM assets for every architecture of every version; kata-dragonball is not an external asset"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding

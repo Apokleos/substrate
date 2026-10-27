@@ -699,6 +699,7 @@ func TestNormalizeSandboxClass(t *testing.T) {
 	}{
 		{name: "gvisor", class: string(atev1.SandboxClassGvisor), want: string(atev1.SandboxClassGvisor)},
 		{name: "microvm", class: string(atev1.SandboxClassMicroVM), want: string(atev1.SandboxClassMicroVM)},
+		{name: "kata", class: string(atev1.SandboxClassKata), want: string(atev1.SandboxClassKata)},
 		{name: "empty", class: "", want: SandboxClassUnknown},
 		{name: "unknown runtime", class: "kvm", want: SandboxClassUnknown},
 		{name: "casing is not normalized away", class: "GVISOR", want: SandboxClassUnknown},

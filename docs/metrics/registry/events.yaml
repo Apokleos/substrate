@@ -136,7 +136,7 @@ groups:
       consumer can sample or drop it without touching the lifecycle events.
     annotations:
       substrate:
-        emitted_by: [ateworker-gvisor, ateworker-microvm]
+        emitted_by: [ateworker-gvisor, ateworker-microvm, ateworker-kata]
         code_anchor: internal/workerstats/usage.go
         cuj: How much CPU and memory does this actor use, and since when?
     attributes:
